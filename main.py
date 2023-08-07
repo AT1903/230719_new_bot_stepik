@@ -1,66 +1,105 @@
-import requests
-import time
-# import pprint
+from aiogram import Bot, Dispatcher, F
+from aiogram.filters import Command
+from aiogram.types import Message
 
-API_URL: str = 'https://api.telegram.org/bot'
 BOT_TOKEN: str = ''
-TEXT: str = 'Апдейт на полученное сообщение - '
-TEXT_RECV: str
-MAX_COUNTER: int = 100
 
-offset: int = -2
-counter: int = 0
-chat_id: int
-timeout: int = 10
-3
 # Чтение токена
 file1 = open('Token.txt', 'r')
 BOT_TOKEN = file1.readline().rstrip()
 file1.close()
 
-# Проверка формируемой ссылки и печать итогового словаря
-# print(f'{API_URL}{BOT_TOKEN}/getUpdates?offset={offset + 1}')
-# updates = requests.get(f'{API_URL}{BOT_TOKEN}/getUpdates?offset={offset + 1}').json()
-# pp = pprint.PrettyPrinter(depth=6)
-# pp.pprint(updates)
+# создаем бота
+bot: Bot = Bot(BOT_TOKEN)
+dp: Dispatcher = Dispatcher()
 
-while counter < MAX_COUNTER:
-    print(f'Попытка - {counter}')
-    start_time = time.time()
-    updates = requests.get(f'{API_URL}{BOT_TOKEN}/getUpdates?offset={offset + 1}&timeout={timeout}').json()
-    if updates['result']:
-        for res in updates['result']:
-            offset = res['update_id']
-            chat_id = res['message']['from']['id']
-            TEXT_RECV = res['message']['text']
-            requests.get(f'{API_URL}{BOT_TOKEN}/sendMessage?chat_id={chat_id}&text={TEXT}{TEXT_RECV}')            
-            print((f'{TEXT}{TEXT_RECV}'))
-    end_time = time.time()
-    print((f'время на работу {start_time - end_time}'))
-
-    counter += 1
-    time.sleep(1)  # 1 second
+# =====================================================
+# обработка любого типа сообщения эхо ответом
+# =====================================================
 
 
-# print('-----Requests lib-----')
-# # файл заполнен в VScode перед отправкой в репозиторий GitHub
+# обработка старт
+@dp.message(Command(commands=['start']))
+async def process_start_command(mess: Message):
+    await mess.answer('Нажата кнопка Старт\n'
+                      '--Тестовый бот--')
+    # await mess.answer(mess.model_dump_json(indent=4))
 
-# api_url = 'http://api.open-notify.org/iss-now.json'
-# # Отправляем GET-запрос и сохраняем ответ в переменной response
-# response = requests.get(api_url)
 
-# if response.status_code == 200:
-#     print(response.text)
-# else:
-#     print(f'Код статуса - {response.status_code}')
+# обработка help
+@dp.message(Command(commands=['help']))
+async def process_help_command(mess: Message):
+    await mess.reply('Нажата кнопка помощь\n'
+                     '--Тестовый бот--')
 
-# print('----API for numbers----')
 
-# api_url = 'http://numbersapi.com/43'
-# # Отправляем GET-запрос и сохраняем ответ в переменной response
-# response = requests.get(api_url)
+# dp.message.register(process_start_command, Command(commands=['start']))
+# dp.message.register(process_help_command, Command(commands=['help']))
 
-# if response.status_code == 200:
-#     print(response.text)
-# else:
-#     print(f'Код статуса - {response.status_code}')
+# обработка остальных сообщений
+
+
+@dp.message()
+async def any_mess(mess: Message):
+    await mess.copy_to(chat_id=mess.chat.id)
+
+
+dp.run_polling(bot)
+exit()
+
+# =====================================================
+# Второй способ добавить хэндлеры - регистрация вручную
+# =====================================================
+
+
+# обработка старт
+async def process_start_command(mess: Message):
+    await mess.answer('Нажата кнопка Старт\n'
+                      '--Тестовый бот--')
+    # await mess.answer(mess.model_dump_json(indent=4))
+
+
+# обработка help
+async def process_help_command(mess: Message):
+    await mess.reply('Нажата кнопка помощь\n'
+                     '--Тестовый бот--')
+
+
+# обработка фото
+async def send_photo_echo(mess: Message):
+    await mess.answer_photo(mess.photo[0].file_id)
+
+# обработка эхо
+
+# Регистрация обработчиков
+dp.message.register(process_start_command, Command(commands=['start']))
+dp.message.register(process_help_command, Command(commands=['help']))
+dp.message.register(send_photo_echo, F.photo)
+
+dp.run_polling(bot)
+exit()
+
+
+# ================================
+# Первый способ добавить хэндлеры
+# ================================
+
+# Обработка команды старт
+ 
+
+@dp.message(Command(commands=['start']))
+async def process_start_command(message: Message):
+    await message.answer('Это тестовый бот')
+
+
+@dp.message(Command(commands=['help']))
+async def process_help_command(message: Message):
+    await message.answer('Выбрана опция Help')
+
+
+@dp.message()
+async def send_echo(message: Message):
+    await message.reply(message.text)
+
+if __name__ == '__main__':
+    dp.run_polling(bot)
