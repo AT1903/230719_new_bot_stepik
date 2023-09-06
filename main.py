@@ -8,7 +8,7 @@ import random
 
 Users = {}
 BOT_TOKEN: str
-admin_ids: list[int] = [1859997762, 178876776, 197177271]
+admin_ids: list[int] = [178876776, 197177271] # мой id 1859997762
 
 
 # Фильтр на проверку админ. прав
@@ -18,12 +18,6 @@ class filter_admin(BaseFilter):
 
     async def __call__(self, mess: Message):
         return mess.from_user.id in self.list_admins
-
-    # async def __call__(self, *args: Any, **kwds: Any) -> Any:
-    #     return super().__call__(*args, **kwds)
-
-    # def __call__(self, mess: Message):
-    #     return mess.from_user.id in self.list_admins
 
 
 # Чтение токена
